@@ -1,0 +1,45 @@
+name: Shell Script Validation
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: artemis-shell-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Validate Bash syntax
+        run: |
+          for script in scripts/start-emulator.sh scripts/verify-wsl2.sh; do
+            bash -n "$script"
+          done
+      - name: Validate committed patch whitespace
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [[ -n "$PR_BASE_SHA" ]]; then
+            git fetch --no-tags origin "$PR_BASE_SHA" --depth=1
+            git diff --check "$PR_BASE_SHA" "$GITHUB_SHA"
+          elif [[ -n "$PUSH_BEFORE_SHA" && ! "$PUSH_BEFORE_SHA" =~ ^0+$ ]]; then
+            if git fetch --no-tags origin "$PUSH_BEFORE_SHA" --depth=1; then
+              git diff --check "$PUSH_BEFORE_SHA" "$GITHUB_SHA"
+            else
+              git diff-tree --check --root --no-commit-id -r "$GITHUB_SHA"
+            fi
+          else
+            git diff-tree --check --root --no-commit-id -r "$GITHUB_SHA"
+          fi
