@@ -21,6 +21,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Validate Bash syntax
-        run: bash -n scripts/start-emulator.sh scripts/verify-wsl2.sh
-      - name: Validate patch whitespace
-        run: git diff --check
+        run: |
+          for script in scripts/start-emulator.sh scripts/verify-wsl2.sh; do
+            bash -n "$script"
+          done
+      - name: Validate committed patch whitespace
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [[ -n "$PR_BASE_SHA" ]]; then
+            git diff --check "$PR_BASE_SHA" "$GITHUB_SHA"
+          elif [[ -n "$PUSH_BEFORE_SHA" && ! "$PUSH_BEFORE_SHA" =~ ^0+$ ]]; then
+            git diff --check "$PUSH_BEFORE_SHA" "$GITHUB_SHA"
+          else
+            git diff-tree --check --root --no-commit-id -r "$GITHUB_SHA"
+          fi
