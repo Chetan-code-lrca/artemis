@@ -182,7 +182,7 @@ Run:
 bash scripts/verify-wsl2.sh
 ```
 
-GitHub Actions checks Bash syntax and patch whitespace on every push and pull request. The CI job intentionally does not try to access `/dev/kvm`, boot an Android emulator, or invoke the WSL-only runtime checks.
+GitHub Actions checks Bash syntax, ShellCheck findings, and patch whitespace on every push and pull request. The CI job intentionally does not try to access `/dev/kvm`, boot an Android emulator, or invoke the WSL-only runtime checks.
 
 This checks WSL, `/dev/kvm`, `kvm` group membership, Android command-line tools, emulator acceleration, configured AVDs, and connected ADB devices.
 
