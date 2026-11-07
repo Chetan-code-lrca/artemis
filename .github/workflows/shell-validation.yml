@@ -25,6 +25,12 @@ jobs:
           for script in scripts/start-emulator.sh scripts/verify-wsl2.sh; do
             bash -n "$script"
           done
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shellcheck
+      - name: Run ShellCheck
+        run: shellcheck scripts/start-emulator.sh scripts/verify-wsl2.sh
       - name: Validate committed patch whitespace
         shell: bash
         env:
